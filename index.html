@@ -1,0 +1,2327 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سامانه ثبت گزارش روزانه مطالعه دانش‌آموز | گروه آموزشی تیک</title>
+    <!-- Vazirmatn Font CDN -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Supabase JS Client (UMD Bundle) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        :root {
+            --primary: #2563EB;
+            --primary-hover: #1D4ED8;
+            --primary-light: #EFF6FF;
+            --secondary: #0D9488;
+            --secondary-light: #CCFBF1;
+            --success: #16A34A;
+            --success-light: #DCFCE7;
+            --warning: #D97706;
+            --warning-light: #FEF3C7;
+            --danger: #DC2626;
+            --danger-light: #FEE2E2;
+            
+            --bg-main: #F8FAFC;
+            --bg-card: #FFFFFF;
+            --bg-card-hover: #F1F5F9;
+            --bg-input: #F8FAFC;
+            
+            --text-main: #0F172A;
+            --text-muted: #64748B;
+            --text-subtle: #94A3B8;
+            
+            --border-color: #E2E8F0;
+            --border-focus: #3B82F6;
+            
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+            --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+            --shadow-glow: 0 0 20px rgba(37, 99, 235, 0.15);
+            
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 18px;
+            --radius-full: 9999px;
+            
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        [data-theme="dark"] {
+            --bg-main: #0F172A;
+            --bg-card: #1E293B;
+            --bg-card-hover: #334155;
+            --bg-input: #0F172A;
+            
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+            --text-subtle: #64748B;
+            
+            --border-color: #334155;
+            --border-focus: #60A5FA;
+            
+            --primary-light: rgba(37, 99, 235, 0.15);
+            --secondary-light: rgba(13, 148, 136, 0.15);
+            --success-light: rgba(22, 163, 74, 0.15);
+            --warning-light: rgba(217, 119, 6, 0.15);
+            --danger-light: rgba(220, 38, 38, 0.15);
+            
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+            --shadow-glow: 0 0 20px rgba(37, 99, 235, 0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding-bottom: 40px;
+            transition: var(--transition);
+        }
+
+        .container {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 20px 16px;
+        }
+
+        .top-navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 12px 24px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .nav-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .nav-info-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--bg-main);
+            padding: 6px 14px;
+            border-radius: var(--radius-full);
+            border: 1px solid var(--border-color);
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: var(--radius-md);
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: var(--transition);
+            user-select: none;
+            white-space: nowrap;
+        }
+
+        .btn-primary { background: var(--primary); color: #ffffff; }
+        .btn-primary:hover { background: var(--primary-hover); box-shadow: var(--shadow-glow); }
+        .btn-secondary { background: var(--bg-main); color: var(--text-main); border-color: var(--border-color); }
+        .btn-secondary:hover { background: var(--bg-card-hover); border-color: var(--text-muted); }
+        .btn-danger { background: var(--danger); color: #ffffff; }
+        .btn-danger:hover { background: #B91C1C; }
+        .btn-icon { padding: 8px; border-radius: var(--radius-md); width: 38px; height: 38px; }
+
+        .progress-bar-wrapper {
+            width: 100%;
+            height: 6px;
+            background: var(--border-color);
+            border-radius: var(--radius-full);
+            overflow: hidden;
+            margin-top: 12px;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--secondary), var(--primary));
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        .app-header {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 24px;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px dashed var(--border-color);
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .branding {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .logo-box {
+            width: 52px;
+            height: 52px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-size: 1.5rem;
+            font-weight: 800;
+            box-shadow: var(--shadow-glow);
+        }
+
+        .branding-text h1 { font-size: 1.35rem; font-weight: 800; color: var(--text-main); }
+        .branding-text p { font-size: 0.85rem; color: var(--text-muted); }
+
+        .header-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group label { font-size: 0.82rem; font-weight: 700; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 14px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-main);
+            font-size: 0.92rem;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .form-input:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12); }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .kpi-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 18px;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--primary); }
+
+        .kpi-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+
+        .kpi-content h3 { font-size: 0.78rem; color: var(--text-muted); font-weight: 600; margin-bottom: 2px; }
+        .kpi-value { font-size: 1.2rem; font-weight: 800; color: var(--text-main); }
+        .kpi-subtext { font-size: 0.75rem; color: var(--text-subtle); margin-top: 2px; }
+
+        .section-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 24px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .section-title span {
+            width: 10px;
+            height: 22px;
+            background: var(--primary);
+            border-radius: var(--radius-full);
+            display: inline-block;
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+        }
+
+        .study-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1100px;
+            text-align: right;
+        }
+
+        .study-table th {
+            background: var(--bg-main);
+            padding: 12px 10px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
+        }
+
+        .study-table td { padding: 8px 6px; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
+        .study-table tr:last-child td { border-bottom: none; }
+        .study-table tr:hover td { background-color: var(--bg-card-hover); }
+
+        .table-input {
+            width: 100%;
+            padding: 8px 10px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-main);
+            font-size: 0.85rem;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .table-input:focus { border-color: var(--border-focus); background: var(--bg-card); }
+        .table-input[readonly] { background: var(--bg-main); font-weight: 700; color: var(--primary); cursor: not-allowed; border-style: dashed; }
+        .input-num { text-align: center; }
+
+        .time-picker-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .time-picker-wrapper input[type="text"] {
+            padding-left: 26px;
+            text-align: center;
+            direction: ltr;
+            font-weight: 700;
+        }
+
+        .time-picker-wrapper input[type="time"] {
+            position: absolute;
+            left: 4px;
+            width: 22px;
+            height: 22px;
+            opacity: 0;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .time-picker-icon {
+            position: absolute;
+            left: 6px;
+            font-size: 0.85rem;
+            pointer-events: none;
+            opacity: 0.6;
+            z-index: 1;
+        }
+
+        .action-btns { display: flex; align-items: center; justify-content: center; gap: 6px; }
+
+        .btn-tbl {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 6px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.95rem;
+        }
+
+        .btn-tbl:hover { color: var(--primary); background: var(--primary-light); }
+        .btn-tbl.delete:hover { color: var(--danger); background: var(--danger-light); }
+
+        .daily-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 16px;
+        }
+
+        .stat-input-card {
+            background: var(--bg-main);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            transition: var(--transition);
+        }
+
+        .checklist-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .checklist-column { background: var(--bg-main); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 18px; }
+
+        .checklist-column-title {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checklist-items { display: flex; flex-direction: column; gap: 10px; }
+
+        .check-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: var(--transition);
+            user-select: none;
+        }
+
+        .check-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
+
+        .reflection-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 20px; }
+        .input-list { display: flex; flex-direction: column; gap: 8px; }
+
+        .mood-selector {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            background: var(--bg-main);
+            padding: 10px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+        }
+
+        .mood-btn {
+            font-size: 1.6rem;
+            background: transparent;
+            border: 2px solid transparent;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            padding: 6px;
+            transition: var(--transition);
+            line-height: 1;
+            flex: 1;
+            text-align: center;
+        }
+
+        .mood-btn.active { background: var(--bg-card); border-color: var(--primary); box-shadow: var(--shadow-sm); }
+
+        .slider-wrapper {
+            background: var(--bg-main);
+            padding: 16px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .slider-header { display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 700; }
+
+        .range-slider {
+            width: 100%;
+            height: 8px;
+            border-radius: var(--radius-full);
+            outline: none;
+            background: var(--border-color);
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+
+        .textarea-full {
+            width: 100%;
+            min-height: 100px;
+            padding: 14px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-main);
+            font-size: 0.9rem;
+            outline: none;
+            resize: vertical;
+            transition: var(--transition);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: var(--transition);
+        }
+
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+
+        .modal-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            max-width: 500px;
+            width: 90%;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-lg);
+            text-align: center;
+        }
+
+        .modal-card-lg {
+            max-width: 1100px;
+            width: 95%;
+            max-height: 90vh;
+            overflow-y: auto;
+            text-align: right;
+        }
+
+        .modal-card h3 { font-size: 1.15rem; margin-bottom: 10px; color: var(--text-main); }
+        .modal-card p { font-size: 0.88rem; color: var(--text-muted); margin-bottom: 20px; }
+        .modal-actions { display: flex; gap: 12px; justify-content: center; margin-top: 16px; }
+
+        .date-filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--bg-main);
+            padding: 12px 16px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .confidence-badge { padding: 4px 10px; border-radius: var(--radius-full); font-size: 0.75rem; font-weight: 800; }
+        .conf-high { background: var(--success-light); color: var(--success); }
+        .conf-med { background: var(--warning-light); color: var(--warning); }
+        .conf-low { background: var(--danger-light); color: var(--danger); }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 24px;
+            background: var(--text-main);
+            color: var(--bg-main);
+            padding: 12px 20px;
+            border-radius: var(--radius-md);
+            font-size: 0.88rem;
+            font-weight: 600;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1100;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .toast.show { transform: translateY(0); opacity: 1; }
+
+        .app-footer {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+            margin-top: 30px;
+        }
+
+        @media print {
+            .top-navbar, .nav-actions, .modal-actions, .date-filter-bar, button { display: none !important; }
+            .modal-overlay.active { position: static !important; background: none !important; }
+            .modal-card-lg { max-width: 100% !important; max-height: none !important; box-shadow: none !important; border: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <script>
+        window.EMBEDDED_STUDENT_ID = "STD-000001";
+    </script>
+
+    <div class="container">
+        <nav class="top-navbar">
+            <div class="nav-info">
+                <div class="nav-info-item">
+                    <span>🕒</span>
+                    <span id="liveClock">00:00:00</span>
+                </div>
+                <div class="nav-info-item">
+                    <span>📅</span>
+                    <span id="currentDate">-- / -- / ----</span>
+                </div>
+                <div class="nav-info-item" style="background:var(--primary-light); color:var(--primary); font-weight:800;">
+                    <span>🆔</span>
+                    <span id="topStudentCodeDisplay">STD-000001</span>
+                </div>
+            </div>
+
+            <div class="nav-actions">
+                <button class="btn btn-secondary" onclick="exportJSON()">
+                    💾 خروجی JSON این روز
+                </button>
+                <button class="btn btn-secondary" onclick="triggerImportJSON()">
+                    📂 بارگذاری JSON
+                </button>
+                <input type="file" id="importJsonInput" accept=".json" style="display: none;" onchange="importJSON(event)">
+                
+                <button class="btn btn-danger" onclick="openClearDataModal()" title="حذف تمام سوابق دانش‌آموز جاری">
+                    🗑️ حذف داده‌ها
+                </button>
+                
+                <button class="btn btn-secondary btn-icon" id="themeToggle" onclick="toggleTheme()" title="تغییر پوسته">
+                    <span id="themeIcon">🌙</span>
+                </button>
+            </div>
+
+            <div class="progress-bar-wrapper" title="میزان تکمیل گزارش امروز">
+                <div class="progress-bar-fill" id="completionProgress"></div>
+            </div>
+        </nav>
+
+        <main id="student-view">
+            <header class="app-header">
+                <div class="header-top">
+                    <div class="branding">
+                        <div class="logo-box">تیک</div>
+                        <div class="branding-text">
+                            <h1>گزارش کار روزانه مطالعه دانش‌آموز</h1>
+                            <p>دپارتمان مشاوره گروه تیک - فرم ثبت استاندارد روزانه</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="header-grid">
+                    <div class="form-group">
+                        <label for="studentCode">🆔 کد اختصاصی دانش‌آموز (قابل تغییر)</label>
+                        <input type="text" id="studentCode" class="form-input" placeholder="مثلاً: STD-000001">
+                    </div>
+                    <div class="form-group">
+                        <label for="studentName">👤 نام دانش‌آموز</label>
+                        <input type="text" id="studentName" class="form-input" placeholder="نام و نام خانوادگی">
+                    </div>
+                    <div class="form-group">
+                        <label for="reportTitle">📌 عنوان گزارش</label>
+                        <input type="text" id="reportTitle" class="form-input" placeholder="مثلاً: برنامه روز شنبه - جمع‌بندی">
+                    </div>
+                    <div class="form-group">
+                        <label for="reportDate">📆 تاریخ گزارش</label>
+                        <input type="text" id="reportDate" class="form-input" placeholder="۱۴۰۳/۰۵/۱۰">
+                    </div>
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label for="dailyMotivation">✨ انگیزه و هدف امروز</label>
+                        <input type="text" id="dailyMotivation" class="form-input" placeholder="جمله انگیزشی یا هدف طلایی امروز...">
+                    </div>
+                </div>
+            </header>
+
+            <section class="kpi-grid">
+                <div class="kpi-card" onclick="openStatDrillDown('totalStudyMins')">
+                    <div class="kpi-icon" style="background: var(--primary-light); color: var(--primary);">📚</div>
+                    <div class="kpi-content">
+                        <h3>مجموع مطالعه</h3>
+                        <div class="kpi-value" id="kpiTotalTime">۰ ساعت و ۰ دقیقه</div>
+                        <div class="kpi-subtext">کلیک جهت ریز جزییات</div>
+                    </div>
+                </div>
+
+                <div class="kpi-card" onclick="openStatDrillDown('totalTests')">
+                    <div class="kpi-icon" style="background: var(--secondary-light); color: var(--secondary);">📝</div>
+                    <div class="kpi-content">
+                        <h3>مجموع تست‌ها</h3>
+                        <div class="kpi-value" id="kpiTotalTests">۰</div>
+                        <div class="kpi-subtext">کلیک جهت ریز جزییات</div>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon" style="background: var(--success-light); color: var(--success);">📈</div>
+                    <div class="kpi-content">
+                        <h3>میانگین درصد تست</h3>
+                        <div class="kpi-value" id="kpiAvgPercentage">۰٪</div>
+                    </div>
+                </div>
+
+                <div class="kpi-card" onclick="openStatDrillDown('focus')">
+                    <div class="kpi-icon" style="background: var(--warning-light); color: var(--warning);">🎯</div>
+                    <div class="kpi-content">
+                        <h3>میانگین تمرکز</h3>
+                        <div class="kpi-value" id="kpiAvgFocus">۰ از ۱۰</div>
+                        <div class="kpi-subtext">کلیک جهت ریز جزییات</div>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon" style="background: var(--danger-light); color: var(--danger);">⚡</div>
+                    <div class="kpi-content">
+                        <h3>میانگین حواس‌پرتی</h3>
+                        <div class="kpi-value" id="kpiAvgDistraction">۰ از ۱۰</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section-card">
+                <div class="section-header">
+                    <div class="section-title">
+                        <span></span>
+                        <h2>جدول ثبت دروس و فعالیت‌های مطالعاتی</h2>
+                    </div>
+                    <button class="btn btn-primary" onclick="addNewRow()">
+                        <span>➕</span> افزودن درس جدید
+                    </button>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="study-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 13%;">درس</th>
+                                <th style="width: 15%;">مبحث</th>
+                                <th style="width: 6%; text-align: center;">نوع</th>
+                                <th style="width: 6%;">تست کل</th>
+                                <th style="width: 5%;">صحیح</th>
+                                <th style="width: 5%;">غلط</th>
+                                <th style="width: 5%;">نزده</th>
+                                <th style="width: 7%;">درصد (%)</th>
+                                <th style="width: 9%;">شروع (24H)</th>
+                                <th style="width: 9%;">پایان (24H)</th>
+                                <th style="width: 8%;">مدت (دقیقه)</th>
+                                <th style="width: 5%;">تمرکز</th>
+                                <th style="width: 5%;">حواس‌پرتی</th>
+                                <th style="width: 6%;">عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studyTableBody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="section-card">
+                <div class="section-header">
+                    <div class="section-title">
+                        <span></span>
+                        <h2>خلاصه و آمار عملکرد روزانه</h2>
+                    </div>
+                </div>
+
+                <div class="daily-stats-grid">
+                    <div class="stat-input-card">
+                        <label for="statSleep">😴 میزان خواب (ساعت)</label>
+                        <input type="number" id="statSleep" class="form-input input-num" min="0" max="24" step="0.5" placeholder="مثلاً: ۷.۵">
+                    </div>
+
+                    <div class="stat-input-card">
+                        <label for="statPhone">📱 استفاده از گوشی (ساعت)</label>
+                        <input type="number" id="statPhone" class="form-input input-num" min="0" max="24" step="0.5" placeholder="مثلاً: ۱.۵">
+                    </div>
+
+                    <div class="stat-input-card">
+                        <label for="statProgramCompletion">🎯 درصد انجام برنامه (%)</label>
+                        <input type="number" id="statProgramCompletion" class="form-input input-num" min="0" max="100" placeholder="۰ تا ۱۰۰">
+                    </div>
+
+                    <div class="stat-input-card">
+                        <label for="statDailyScore">⭐ نمره به عملکرد امروز (۱-۱۰)</label>
+                        <input type="number" id="statDailyScore" class="form-input input-num" min="1" max="10" placeholder="۱ تا ۱۰">
+                    </div>
+                </div>
+            </section>
+
+            <section class="section-card">
+                <div class="section-header">
+                    <div class="section-title">
+                        <span></span>
+                        <h2>چک‌لیست ارزیابی مهارت‌ها و فعالیت‌ها</h2>
+                    </div>
+                </div>
+
+                <div class="checklist-grid">
+                    <div class="checklist-column">
+                        <div class="checklist-column-title">🧠 مهارت‌های شناختی</div>
+                        <div class="checklist-items">
+                            <label class="check-item"><input type="checkbox"><span>مدیریت زمان و تکنیک پومودورو</span></label>
+                            <label class="check-item"><input type="checkbox"><span>مرور فعال و بازیابی اطلاعات</span></label>
+                            <label class="check-item"><input type="checkbox"><span>کنترل استرس و هیجانات منفی</span></label>
+                            <label class="check-item"><input type="checkbox"><span>خودارزیابی صادقانه و دقیق</span></label>
+                        </div>
+                    </div>
+
+                    <div class="checklist-column">
+                        <div class="checklist-column-title">📖 مهارت‌های درسی</div>
+                        <div class="checklist-items">
+                            <label class="check-item"><input type="checkbox"><span>خلاصه‌نویسی و یادداشت‌برداری استاندارد</span></label>
+                            <label class="check-item"><input type="checkbox"><span>تحلیل کامل و دقیق تست‌های اشتباه/نزده</span></label>
+                            <label class="check-item"><input type="checkbox"><span>حل تست زمان‌دار و سنجشی</span></label>
+                            <label class="check-item"><input type="checkbox"><span>رفع اشکال روزانه و برطرف‌کردن ابهامات</span></label>
+                        </div>
+                    </div>
+
+                    <div class="checklist-column">
+                        <div class="checklist-column-title">🌟 فعالیت‌های ویژه</div>
+                        <div class="checklist-items">
+                            <label class="check-item"><input type="checkbox"><span>ورزش یا تحرک بدنی منظم</span></label>
+                            <label class="check-item"><input type="checkbox"><span>استراحت باکیفیت و بدون گوشی</span></label>
+                            <label class="check-item"><input type="checkbox"><span>تغذیه سالم و مصرف کافی آب</span></label>
+                            <label class="check-item"><input type="checkbox"><span>مرور و تنظیم برنامه فردایی</span></label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section-card">
+                <div class="section-header">
+                    <div class="section-title">
+                        <span></span>
+                        <h2>تحلیل و خودارزیابی کیفی روزانه</h2>
+                    </div>
+                </div>
+
+                <div class="reflection-grid">
+                    <div class="form-group">
+                        <label for="todayGoals">🎯 اهداف اصلی امروز</label>
+                        <textarea id="todayGoals" class="textarea-full" placeholder="اهدافی که برای امروز تعیین کرده بودید..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>🏆 سه موفقیت امروز</label>
+                        <div class="input-list">
+                            <input type="text" class="form-input win-input" placeholder="۱. پوشش کامل برنامه زیست">
+                            <input type="text" class="form-input win-input" placeholder="۲. کاهش تست‌های اشتباه">
+                            <input type="text" class="form-input win-input" placeholder="۳. مدیریت خوب زمان خواب">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>⚠️ سه اشتباه / چالش امروز</label>
+                        <div class="input-list">
+                            <input type="text" class="form-input mistake-input" placeholder="۱. حواس‌پرتی با گوشی در عصر">
+                            <input type="text" class="form-input mistake-input" placeholder="۲. شروع با تاخیر در باکس دوم">
+                            <input type="text" class="form-input mistake-input" placeholder="۳. عجله در پاسخ به تست‌ها">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="distractionReasons">💭 دلایل حواس‌پرتی</label>
+                        <textarea id="distractionReasons" class="textarea-full" placeholder="چه عواملی تمرکز شما را کاهش دادند؟"></textarea>
+                    </div>
+                </div>
+
+                <div class="reflection-grid">
+                    <div class="form-group">
+                        <label>😀 حال روحی امروز</label>
+                        <div class="mood-selector" id="moodSelector">
+                            <button class="mood-btn" data-mood="happy" onclick="selectMood(this)">😀</button>
+                            <button class="mood-btn" data-mood="neutral" onclick="selectMood(this)">😐</button>
+                            <button class="mood-btn" data-mood="sad" onclick="selectMood(this)">😔</button>
+                            <button class="mood-btn" data-mood="tired" onclick="selectMood(this)">😴</button>
+                            <button class="mood-btn" data-mood="cool" onclick="selectMood(this)">😎</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="slider-wrapper">
+                            <div class="slider-header">
+                                <span>⚡ میزان انرژی امروز</span>
+                                <span id="energyVal" style="color: var(--primary);">۷۰٪</span>
+                            </div>
+                            <input type="range" id="energySlider" class="range-slider" min="0" max="100" value="70">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="slider-wrapper">
+                            <div class="slider-header">
+                                <span>🧘 میزان استرس و فشار</span>
+                                <span id="stressVal" style="color: var(--danger);">۳۰٪</span>
+                            </div>
+                            <input type="range" id="stressSlider" class="range-slider" min="0" max="100" value="30">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section-card">
+                <div class="section-header">
+                    <div class="section-title">
+                        <span></span>
+                        <h2>توصیه و بازخورد مشاور تحصیلی</h2>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <textarea id="consultantNotes" class="textarea-full" placeholder="یادداشت‌ها و راهنمایی‌های مشاور..."></textarea>
+                </div>
+            </section>
+        </main>
+
+        <footer class="app-footer">
+            <p style="font-size:0.85rem; color:var(--text-muted);">سامانه ثبت گزارش کار روزانه مطالعه دانش‌آموز - گروه آموزشی تیک</p>
+        </footer>
+    </div>
+
+    <div class="modal-overlay" id="clearDataModal">
+        <div class="modal-card">
+            <h3>🗑️ حذف کامل کلیه داده‌ها</h3>
+            <p>آیا از پاک‌سازی تمامی سوابق دانش‌آموز جاری اطمینان دارید؟ این عمل غیرقابل بازگشت است.</p>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeClearDataModal()">انصراف</button>
+                <button class="btn btn-danger" onclick="clearAllData()">بله، داده‌ها حذف شوند</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal-card">
+            <h3>⚠️ تایید حذف</h3>
+            <p>آیا از حذف این ردیف مطالعه اطمینان دارید؟</p>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeDeleteModal()">انصراف</button>
+                <button class="btn btn-danger" id="confirmDeleteBtn">حذف شود</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="drillDownModal">
+        <div class="modal-card modal-card-lg">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <h3 id="drillDownModalTitle">📋 جزئیات آمار سوابق</h3>
+                <button class="btn btn-secondary btn-icon" onclick="closeDrillDownModal()">✖️</button>
+            </div>
+
+            <div class="date-filter-bar">
+                <input type="text" id="drillSearchInput" class="form-input" placeholder="🔍 جستجو در گزارش‌ها یا تاریخ..." style="max-width:250px;" oninput="filterDrillDownTable()">
+                <select id="drillSortSelect" class="form-input" style="max-width:180px;" onchange="filterDrillDownTable()">
+                    <option value="date-desc">تاریخ (جدیدترین)</option>
+                    <option value="date-asc">تاریخ (قدیمی‌ترین)</option>
+                </select>
+                <button class="btn btn-secondary" onclick="exportDrillDownCSV()">📊 خروجی Excel / CSV</button>
+                <button class="btn btn-primary" onclick="window.print()">🖨️ چاپ / PDF</button>
+            </div>
+
+            <div class="table-responsive" style="max-height:400px; overflow-y:auto;">
+                <table class="study-table" id="drillDownTable">
+                    <thead>
+                        <tr id="drillDownTableHead">
+                            <th>تاریخ</th>
+                            <th>روز هفته / عنوان</th>
+                            <th>مقدار ثبت‌شده</th>
+                            <th>عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="drillDownTableBody"></tbody>
+                </table>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeDrillDownModal()">بستن</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="exactDayModal">
+        <div class="modal-card modal-card-lg">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--border-color); padding-bottom:10px;">
+                <h3 id="exactDayModalTitle">📑 گزارش کامل ثبت‌شده دانش‌آموز</h3>
+                <button class="btn btn-secondary btn-icon" onclick="closeExactDayModal()">✖️</button>
+            </div>
+            <div id="exactDayModalContent"></div>
+            <div class="modal-actions">
+                <button class="btn btn-primary" onclick="window.print()">🖨️ چاپ این گزارش</button>
+                <button class="btn btn-secondary" onclick="closeExactDayModal()">بستن</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toastMsg">
+        <span id="toastIcon">✨</span>
+        <span id="toastText">پیام سیستم</span>
+    </div>
+
+    <script>
+        // ==========================================
+        // تنظیمات اتصال ابری Supabase
+        // ==========================================
+        const SUPABASE_URL = "https://kmlgihtunssdnzrrwrco.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_1bNVwfyG0oIZaG2dNiumTA_o8vnJIsH";
+
+        let supabaseClient = null;
+        try {
+            if (typeof supabase !== "undefined" && SUPABASE_URL && SUPABASE_ANON_KEY) {
+                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            }
+        } catch (e) {
+            console.warn("اتصال اولیه Supabase برقرار نشد؛ از حافظه آفلاین استفاده می‌شود.", e);
+        }
+
+        // ==========================================
+        // 0. Security Utility (XSS Prevention)
+        // ==========================================
+        function escapeHTML(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;')
+                .replace(/\//g, '&#x2F;');
+        }
+
+        // ==========================================
+        // 1. Data Integrity Specialist Module
+        // ==========================================
+        function normalizeReportSchema(rawReport) {
+            if (!rawReport || typeof rawReport !== 'object') return null;
+
+            const parseNum = (val, defaultVal = 0) => {
+                if (val === null || val === undefined || val === '') return defaultVal;
+                const cleanStr = DateEngine.toAsciiDigits(String(val)).replace(/[^0-9.-]/g, '');
+                const num = parseFloat(cleanStr);
+                return isNaN(num) ? defaultVal : num;
+            };
+
+            const parseStr = (val, defaultVal = '') => {
+                if (val === null || val === undefined) return defaultVal;
+                return String(val).trim();
+            };
+
+            const normalizedRows = Array.isArray(rawReport.rows) ? rawReport.rows.map(r => ({
+                id: parseStr(r.id, 'row_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4)),
+                studyType: parseStr(r.studyType, 'individual'),
+                subject: parseStr(r.subject),
+                topic: parseStr(r.topic),
+                total: parseNum(r.total),
+                correct: parseNum(r.correct),
+                wrong: parseNum(r.wrong),
+                unanswered: parseNum(r.unanswered),
+                percentage: parseStr(r.percentage, '۰٪'),
+                start: DateEngine.normalizeTimeTo24H(r.start),
+                end: DateEngine.normalizeTimeTo24H(r.end),
+                duration: parseNum(r.duration),
+                focus: parseNum(r.focus),
+                distraction: parseNum(r.distraction)
+            })) : [];
+
+            return {
+                ...rawReport,
+                studentCode: parseStr(rawReport.studentCode, 'STD-000001'),
+                studentName: parseStr(rawReport.studentName, 'دانش‌آموز'),
+                reportDate: parseStr(rawReport.reportDate),
+                reportTitle: parseStr(rawReport.reportTitle),
+                dailyMotivation: parseStr(rawReport.dailyMotivation),
+                statSleep: parseNum(rawReport.statSleep),
+                statPhone: parseNum(rawReport.statPhone),
+                statProgramCompletion: parseNum(rawReport.statProgramCompletion),
+                statDailyScore: parseNum(rawReport.statDailyScore),
+                todayGoals: parseStr(rawReport.todayGoals),
+                winInputs: Array.isArray(rawReport.winInputs) ? rawReport.winInputs.map(v => parseStr(v)) : ['', '', ''],
+                mistakeInputs: Array.isArray(rawReport.mistakeInputs) ? rawReport.mistakeInputs.map(v => parseStr(v)) : ['', '', ''],
+                distractionReasons: parseStr(rawReport.distractionReasons),
+                mood: parseStr(rawReport.mood, 'happy'),
+                energy: parseNum(rawReport.energy, 70),
+                stress: parseNum(rawReport.stress, 30),
+                consultantNotes: parseStr(rawReport.consultantNotes),
+                theme: parseStr(rawReport.theme, 'light'),
+                totalStudyMins: parseNum(rawReport.totalStudyMins),
+                totalTests: parseNum(rawReport.totalTests),
+                timestamp: parseNum(rawReport.timestamp, Date.now()),
+                rows: normalizedRows
+            };
+        }
+
+        // ==========================================
+        // 2. DateEngine Module (Jalali & Pure 24H ASCII Time)
+        // ==========================================
+        class DateEngine {
+            static toAsciiDigits(str) {
+                if (str === null || str === undefined) return '';
+                return String(str)
+                    .replace(/[\u06F0-\u06F9]/g, d => String.fromCharCode(d.charCodeAt(0) - 0x06F0 + 48))
+                    .replace(/[\u0660-\u0669]/g, d => String.fromCharCode(d.charCodeAt(0) - 0x0660 + 48));
+            }
+
+            static toPersianDigits(str) {
+                if (str === null || str === undefined) return '';
+                return String(str).replace(/\d/g, d => String.fromCharCode(d.charCodeAt(0) + 0x06F0 - 48));
+            }
+
+            static normalizeTimeTo24H(timeStr) {
+                if (!timeStr) return '';
+                let ascii = this.toAsciiDigits(String(timeStr)).trim().toLowerCase();
+                
+                const isPM = ascii.includes('pm') || ascii.includes('عصر') || ascii.includes('شب') || ascii.includes('بعدازظهر');
+                const isAM = ascii.includes('am') || ascii.includes('ب.ظ') || ascii.includes('صبح');
+                
+                ascii = ascii.replace(/(am|pm|صبح|عصر|شب|بعدازظهر|ب\.ظ|\s)/gi, '');
+                
+                const parts = ascii.split(':').map(p => parseInt(p, 10));
+                if (parts.length < 1 || isNaN(parts[0])) return '';
+                
+                let hours = parts[0];
+                let minutes = parts.length > 1 && !isNaN(parts[1]) ? parts[1] : 0;
+                
+                if (isPM && hours < 12) hours += 12;
+                if (isAM && hours === 12) hours = 0;
+                
+                hours = Math.max(0, Math.min(23, hours));
+                minutes = Math.max(0, Math.min(59, minutes));
+                
+                return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+            }
+
+            static calculateDurationMins(startTime, endTime) {
+                const normStart = this.normalizeTimeTo24H(startTime);
+                const normEnd = this.normalizeTimeTo24H(endTime);
+                
+                if (!normStart || !normEnd) return 0;
+                
+                const [sH, sM] = normStart.split(':').map(Number);
+                const [eH, eM] = normEnd.split(':').map(Number);
+                
+                let startMins = sH * 60 + sM;
+                let endMins = eH * 60 + eM;
+                
+                if (endMins < startMins) {
+                    endMins += 1440;
+                }
+                
+                return Math.max(0, endMins - startMins);
+            }
+
+            static parseJalaliToTimestamp(jalaliStr) {
+                if (!jalaliStr) return 0;
+                
+                const asciiStr = this.toAsciiDigits(jalaliStr).trim();
+                const parts = asciiStr.split(/[\/\.\-]/).map(p => parseInt(p, 10));
+
+                if (parts.length < 3 || parts.some(isNaN)) return 0;
+
+                let [year, month, day] = parts;
+                if (year < 100) year += 1400;
+
+                const gDate = this.jalaliToGregorian(year, month, day);
+                const timestamp = Date.UTC(gDate.year, gDate.month - 1, gDate.day);
+
+                return isNaN(timestamp) ? 0 : timestamp;
+            }
+
+            static formatTimestampToJalali(timestamp) {
+                if (!timestamp || isNaN(timestamp)) return '';
+                const d = new Date(timestamp);
+                try {
+                    const formatter = new Intl.DateTimeFormat('en-US-u-ca-persian', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        timeZone: 'UTC'
+                    });
+                    const parts = formatter.formatToParts(d);
+                    let year = '', month = '', day = '';
+                    for (const part of parts) {
+                        if (part.type === 'year') year = part.value;
+                        if (part.type === 'month') month = part.value;
+                        if (part.type === 'day') day = part.value;
+                    }
+                    return `${year}/${month.padStart(2, '0')}/${day.padStart(2, '0')}`;
+                } catch (e) {
+                    return '';
+                }
+            }
+
+            static jalaliToGregorian(jy, jm, jd) {
+                let jy1 = jy - 979;
+                let jm1 = jm - 1;
+                let jd1 = jd - 1;
+
+                let j_day_no = 365 * jy1 + Math.floor(jy1 / 33) * 8 + Math.floor((jy1 % 33 + 3) / 4);
+                for (let i = 0; i < jm1; ++i) {
+                    j_day_no += (i < 6) ? 31 : 30;
+                }
+                j_day_no += jd1;
+
+                let g_day_no = j_day_no + 79;
+
+                let gy = 1600 + 400 * Math.floor(g_day_no / 146097);
+                g_day_no = g_day_no % 146097;
+
+                let leap = true;
+                if (g_day_no >= 36525) {
+                    g_day_no--;
+                    gy += 100 * Math.floor(g_day_no / 36524);
+                    g_day_no = g_day_no % 36524;
+
+                    if (g_day_no >= 365) {
+                        g_day_no++;
+                    } else {
+                        leap = false;
+                    }
+                }
+
+                gy += 4 * Math.floor(g_day_no / 1461);
+                g_day_no %= 1461;
+
+                if (g_day_no >= 366) {
+                    leap = false;
+                    g_day_no--;
+                    gy += Math.floor(g_day_no / 365);
+                    g_day_no %= 365;
+                }
+
+                let i;
+                const g_days_in_month = [31, (leap ? 29 : 28), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+                for (i = 0; i < 12 && g_day_no >= g_days_in_month[i]; i++) {
+                    g_day_no -= g_days_in_month[i];
+                }
+
+                return { year: gy, month: i + 1, day: g_day_no + 1 };
+            }
+        }
+
+        // ==========================================
+        // 3. StorageManager Module
+        // ==========================================
+        class StorageManager {
+            static timer = null;
+            static isPending = false;
+
+            static debounceSave(delay = 500) {
+                this.isPending = true;
+                if (this.timer) {
+                    clearTimeout(this.timer);
+                }
+                this.timer = setTimeout(() => {
+                    this.flush();
+                }, delay);
+            }
+
+            static flush() {
+                if (this.timer) {
+                    clearTimeout(this.timer);
+                    this.timer = null;
+                }
+                if (this.isPending) {
+                    saveData();
+                    this.isPending = false;
+                }
+            }
+        }
+
+        // ==========================================
+        // 4. Efficiency Module & Time Window Analysis
+        // ==========================================
+        const EfficiencyModule = {
+            calculateEfficiency(historyArray) {
+                if (!Array.isArray(historyArray)) return [];
+                
+                return [...historyArray]
+                    .map(item => ({
+                        ...item,
+                        parsedTimestamp: DateEngine.parseJalaliToTimestamp(item.reportDate) || item.timestamp || 0
+                    }))
+                    .sort((a, b) => a.parsedTimestamp - b.parsedTimestamp)
+                    .map(item => {
+                        const totalMins = item.totalStudyMins || 0;
+                        const totalTests = item.totalTests || 0;
+                        const score = (totalMins / 60) * 10 + totalTests * 0.5;
+                        return {
+                            date: item.reportDate,
+                            timestamp: item.parsedTimestamp,
+                            efficiencyScore: parseFloat(score.toFixed(2))
+                        };
+                    });
+            }
+        };
+
+        function renderTrendAnalysis(historyData) {
+            const sortedData = EfficiencyModule.calculateEfficiency(historyData);
+            if (sortedData.length === 0) return [];
+            return sortedData;
+        }
+
+        function renderTimeWindowAnalysis(historyData) {
+            const windows = {
+                earlyMorning: 0,
+                morning: 0,
+                afternoon: 0,
+                night: 0
+            };
+
+            if (!Array.isArray(historyData)) return windows;
+
+            historyData.forEach(report => {
+                if (!report || !Array.isArray(report.rows)) return;
+                
+                report.rows.forEach(r => {
+                    const normStart = DateEngine.normalizeTimeTo24H(r.start);
+                    if (!normStart) return;
+
+                    const [h] = normStart.split(':').map(Number);
+                    const duration = parseFloat(r.duration) || 0;
+
+                    if (h >= 5 && h < 9) windows.earlyMorning += duration;
+                    else if (h >= 9 && h < 13) windows.morning += duration;
+                    else if (h >= 13 && h < 18) windows.afternoon += duration;
+                    else windows.night += duration;
+                });
+            });
+
+            return windows;
+        }
+
+        // ==========================================
+        // 5. Application State & Main Handlers
+        // ==========================================
+        let currentStudentCode = window.EMBEDDED_STUDENT_ID || 'STD-000001';
+        
+        let state = {
+            studentCode: 'STD-000001',
+            studentName: 'محمدحسین رضایی',
+            grade: 'دوازدهم',
+            field: 'علوم تجربی',
+            school: 'تیزهوشان',
+            consultantName: 'استاد میرنژاد',
+            reportTitle: '',
+            reportDate: '',
+            dailyMotivation: '',
+            statSleep: 0,
+            statPhone: 0,
+            statProgramCompletion: 0,
+            statDailyScore: 0,
+            todayGoals: '',
+            winInputs: ['', '', ''],
+            mistakeInputs: ['', '', ''],
+            distractionReasons: '',
+            mood: 'happy',
+            energy: 70,
+            stress: 30,
+            consultantNotes: '',
+            theme: 'light',
+            rows: []
+        };
+
+        let rowToDeleteId = null;
+        let currentDrillStatType = null;
+
+        window.onload = function() {
+            initLiveClock();
+            setCurrentDateString();
+            initMultiStudentDatabase();
+            loadSavedData();
+            if (!state.rows || state.rows.length === 0) {
+                addNewRow();
+            }
+            updateSliders();
+            updateCalculations();
+            updateProgressBar();
+            setupEventDelegation();
+        };
+
+        function setupEventDelegation() {
+            const mainContainer = document.getElementById('student-view');
+            
+            mainContainer.addEventListener('input', (e) => {
+                const target = e.target;
+                if (target.id === 'studentCode') {
+                    handleStudentCodeChange();
+                    return;
+                }
+                if (target.classList.contains('range-slider')) {
+                    updateSliders();
+                }
+                if (target.closest('tr')) {
+                    const tr = target.closest('tr');
+                    calculateRowValues(tr.id);
+                    updateCalculations();
+                }
+                if (target.id === 'statSleep') {
+                    updateCalculations();
+                }
+                updateProgressBar();
+                StorageManager.debounceSave(500);
+            });
+
+            mainContainer.addEventListener('change', (e) => {
+                const target = e.target;
+                if (target.closest('tr')) {
+                    const tr = target.closest('tr');
+                    calculateRowValues(tr.id);
+                    updateCalculations();
+                }
+                updateProgressBar();
+                StorageManager.debounceSave(500);
+            });
+
+            window.addEventListener('beforeunload', () => {
+                StorageManager.flush();
+            });
+        }
+
+        function initLiveClock() {
+            function tick() {
+                const now = new Date();
+                const hrs = String(now.getHours()).padStart(2, '0');
+                const mins = String(now.getMinutes()).padStart(2, '0');
+                const secs = String(now.getSeconds()).padStart(2, '0');
+                document.getElementById('liveClock').innerText = `${hrs}:${mins}:${secs}`;
+            }
+            tick();
+            setInterval(tick, 1000);
+        }
+
+        function setCurrentDateString() {
+            try {
+                const now = new Date();
+                const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
+                const jalaliDate = new Intl.DateTimeFormat('fa-IR', options).format(now);
+                document.getElementById('currentDate').innerText = DateEngine.toPersianDigits(jalaliDate);
+                if (!document.getElementById('reportDate').value) {
+                    document.getElementById('reportDate').value = jalaliDate;
+                }
+            } catch(e) {
+                document.getElementById('currentDate').innerText = new Date().toLocaleDateString('fa-IR');
+            }
+        }
+
+        function handleStudentCodeChange() {
+            StorageManager.flush();
+            const inputVal = document.getElementById('studentCode').value.trim();
+            const newCode = inputVal || 'STD-000001';
+            currentStudentCode = newCode;
+            state.studentCode = newCode;
+            document.getElementById('topStudentCodeDisplay').innerText = newCode;
+            
+            loadSavedData();
+            updateCalculations();
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.body.getAttribute('data-theme') || 'light';
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            setTheme(newTheme);
+            StorageManager.debounceSave(100);
+        }
+
+        function setTheme(theme) {
+            document.body.setAttribute('data-theme', theme);
+            document.getElementById('themeIcon').innerText = theme === 'dark' ? '☀️' : '🌙';
+            state.theme = theme;
+        }
+
+        function initMultiStudentDatabase() {
+            let db = getStudentsDb();
+            if (!db[currentStudentCode]) {
+                db[currentStudentCode] = {
+                    code: currentStudentCode,
+                    name: state.studentName || 'دانش‌آموز',
+                    grade: 'دوازدهم',
+                    field: 'علوم تجربی',
+                    school: '',
+                    consultantName: 'استاد میرنژاد',
+                    history: []
+                };
+                saveStudentsDb(db);
+            }
+            document.getElementById('topStudentCodeDisplay').innerText = currentStudentCode;
+            document.getElementById('studentCode').value = currentStudentCode;
+        }
+
+        function getStudentsDb() {
+            try {
+                return JSON.parse(localStorage.getItem('students_enterprise_db')) || {};
+            } catch(e) {
+                return {};
+            }
+        }
+
+        function saveStudentsDb(db) {
+            localStorage.setItem('students_enterprise_db', JSON.stringify(db));
+        }
+
+        function getStudentHistory(code) {
+            const db = getStudentsDb();
+            return (db[code] && db[code].history) ? db[code].history : [];
+        }
+
+        function addNewRow(data = null) {
+            const tbody = document.getElementById('studyTableBody');
+            const rowId = data ? data.id : 'row_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+
+            const tr = document.createElement('tr');
+            tr.setAttribute('id', rowId);
+
+            const studyTypeVal = data ? (data.studyType || 'individual') : 'individual';
+            const startVal24 = data ? DateEngine.normalizeTimeTo24H(data.start) : '';
+            const endVal24 = data ? DateEngine.normalizeTimeTo24H(data.end) : '';
+
+            tr.innerHTML = `
+                <td><input type="text" class="table-input row-subject" placeholder="نام درس" value="${data ? escapeHTML(data.subject) : ''}"></td>
+                <td><input type="text" class="table-input row-topic" placeholder="فصل یا مبحث" value="${data ? escapeHTML(data.topic) : ''}"></td>
+                <td>
+                    <select class="table-input row-study-type" style="font-size: 1.1rem; text-align: center; cursor: pointer; padding: 4px;" title="انتخاب نوع مطالعه">
+                        <option value="individual" title="مطالعه فردی (ضریب ۲)" ${studyTypeVal === 'individual' ? 'selected' : ''}>📖</option>
+                        <option value="class" title="کلاس / فیلم آموزشی (ضریب ۱.۳)" ${studyTypeVal === 'class' ? 'selected' : ''}>🎥</option>
+                        <option value="school" title="مدرسه (ضریب ۱)" ${studyTypeVal === 'school' ? 'selected' : ''}>🏫</option>
+                    </select>
+                </td>
+                <td><input type="number" class="table-input input-num row-total" min="0" placeholder="۰" value="${data ? escapeHTML(data.total) : ''}"></td>
+                <td><input type="number" class="table-input input-num row-correct" min="0" placeholder="۰" value="${data ? escapeHTML(data.correct) : ''}"></td>
+                <td><input type="number" class="table-input input-num row-wrong" min="0" placeholder="۰" value="${data ? escapeHTML(data.wrong) : ''}"></td>
+                <td><input type="number" class="table-input input-num row-unanswered" min="0" placeholder="۰" value="${data ? escapeHTML(data.unanswered) : ''}"></td>
+                <td><input type="text" class="table-input input-num row-percentage" readonly placeholder="۰٪" value="${data ? escapeHTML(data.percentage) : '۰٪'}"></td>
+                <td>
+                    <div class="time-picker-wrapper">
+                        <span class="time-picker-icon">🕒</span>
+                        <input type="text" class="table-input row-start" placeholder="08:00" maxLength="5" value="${startVal24}" onblur="format24HInput(this, '${rowId}')">
+                        <input type="time" class="row-start-picker" value="${startVal24}" onchange="syncTimePickerToInput(this, '.row-start', '${rowId}')">
+                    </div>
+                </td>
+                <td>
+                    <div class="time-picker-wrapper">
+                        <span class="time-picker-icon">🕒</span>
+                        <input type="text" class="table-input row-end" placeholder="10:30" maxLength="5" value="${endVal24}" onblur="format24HInput(this, '${rowId}')">
+                        <input type="time" class="row-end-picker" value="${endVal24}" onchange="syncTimePickerToInput(this, '.row-end', '${rowId}')">
+                    </div>
+                </td>
+                <td><input type="number" class="table-input input-num row-duration" min="0" placeholder="۰" value="${data ? escapeHTML(data.duration) : ''}"></td>
+                <td><input type="number" class="table-input input-num row-focus" min="0" max="10" placeholder="۰-۱۰" value="${data ? escapeHTML(data.focus) : ''}"></td>
+                <td><input type="number" class="table-input input-num row-distraction" min="0" max="10" placeholder="۰-۱۰" value="${data ? escapeHTML(data.distraction) : ''}"></td>
+                <td>
+                    <div class="action-btns">
+                        <button class="btn-tbl delete" onclick="openDeleteModal('${rowId}')" title="حذف ردیف">🗑️</button>
+                    </div>
+                </td>
+            `;
+
+            tbody.appendChild(tr);
+            if (!data) {
+                StorageManager.debounceSave(500);
+                updateCalculations();
+            }
+        }
+
+        function syncTimePickerToInput(pickerEl, targetClass, rowId) {
+            const tr = document.getElementById(rowId);
+            if (!tr) return;
+            const textInput = tr.querySelector(targetClass);
+            if (textInput && pickerEl.value) {
+                textInput.value = DateEngine.normalizeTimeTo24H(pickerEl.value);
+            }
+            calculateRowValues(rowId);
+            updateCalculations();
+            StorageManager.debounceSave(500);
+        }
+
+        function format24HInput(inputEl, rowId) {
+            if (inputEl.value) {
+                const norm = DateEngine.normalizeTimeTo24H(inputEl.value);
+                inputEl.value = norm;
+                
+                const wrapper = inputEl.closest('.time-picker-wrapper');
+                if (wrapper) {
+                    const picker = wrapper.querySelector('input[type="time"]');
+                    if (picker) picker.value = norm;
+                }
+            }
+            calculateRowValues(rowId);
+            updateCalculations();
+        }
+
+        function calculateRowValues(rowId) {
+            const tr = document.getElementById(rowId);
+            if (!tr) return;
+
+            const totalInput = tr.querySelector('.row-total');
+            const correctInput = tr.querySelector('.row-correct');
+            const wrongInput = tr.querySelector('.row-wrong');
+            const unansweredInput = tr.querySelector('.row-unanswered');
+            const percentageInput = tr.querySelector('.row-percentage');
+
+            const startInput = tr.querySelector('.row-start');
+            const endInput = tr.querySelector('.row-end');
+            const durationInput = tr.querySelector('.row-duration');
+
+            if (startInput.value && endInput.value) {
+                const duration = DateEngine.calculateDurationMins(startInput.value, endInput.value);
+                durationInput.value = duration;
+            }
+
+            const total = parseInt(totalInput.value) || 0;
+            const correct = parseInt(correctInput.value) || 0;
+            const wrong = parseInt(wrongInput.value) || 0;
+
+            if (total > 0) {
+                if (correct + wrong <= total) unansweredInput.value = total - (correct + wrong);
+                const score = ((correct * 3 - wrong) / (total * 3)) * 100;
+                percentageInput.value = DateEngine.toPersianDigits(score.toFixed(1)) + '٪';
+            } else {
+                percentageInput.value = '۰٪';
+            }
+        }
+
+        function openDeleteModal(rowId) {
+            rowToDeleteId = rowId;
+            document.getElementById('confirmModal').classList.add('active');
+            document.getElementById('confirmDeleteBtn').onclick = confirmDeleteRow;
+        }
+
+        function closeDeleteModal() {
+            rowToDeleteId = null;
+            document.getElementById('confirmModal').classList.remove('active');
+            StorageManager.flush();
+        }
+
+        function confirmDeleteRow() {
+            if (rowToDeleteId) {
+                const tr = document.getElementById(rowToDeleteId);
+                if (tr) tr.remove();
+                StorageManager.debounceSave(100);
+                updateCalculations();
+                updateProgressBar();
+                showToast('ردیف موردنظر حذف شد 🗑️');
+            }
+            closeDeleteModal();
+        }
+
+        function updateCalculations() {
+            const rows = document.querySelectorAll('#studyTableBody tr');
+            let totalMins = 0;
+            let totalTests = 0;
+            let weightedScoreSum = 0;
+            let focusSum = 0, focusCount = 0;
+            let distractionSum = 0, distractionCount = 0;
+
+            rows.forEach(tr => {
+                const duration = parseInt(tr.querySelector('.row-duration').value) || 0;
+                const total = parseInt(tr.querySelector('.row-total').value) || 0;
+                const pct = parseFloat(DateEngine.toAsciiDigits(tr.querySelector('.row-percentage').value).replace('٪', '')) || 0;
+                const focus = parseFloat(tr.querySelector('.row-focus').value);
+                const distraction = parseFloat(tr.querySelector('.row-distraction').value);
+
+                totalMins += duration;
+                totalTests += total;
+                weightedScoreSum += (pct * total);
+
+                if (!isNaN(focus)) { focusSum += focus; focusCount++; }
+                if (!isNaN(distraction)) { distractionSum += distraction; distractionCount++; }
+            });
+
+            const hrs = Math.floor(totalMins / 60);
+            const mins = totalMins % 60;
+            document.getElementById('kpiTotalTime').innerText = DateEngine.toPersianDigits(`${hrs} ساعت و ${mins} دقیقه`);
+            document.getElementById('kpiTotalTests').innerText = DateEngine.toPersianDigits(totalTests.toLocaleString('fa-IR'));
+
+            const avgPct = totalTests > 0 ? (weightedScoreSum / totalTests) : 0;
+            document.getElementById('kpiAvgPercentage').innerText = DateEngine.toPersianDigits(avgPct.toFixed(1)) + '٪';
+
+            document.getElementById('kpiAvgFocus').innerText = focusCount > 0 ? DateEngine.toPersianDigits((focusSum / focusCount).toFixed(1)) + ' از ۱۰' : '۰ از ۱۰';
+            document.getElementById('kpiAvgDistraction').innerText = distractionCount > 0 ? DateEngine.toPersianDigits((distractionSum / distractionCount).toFixed(1)) + ' از ۱۰' : '۰ از ۱۰';
+        }
+
+        function selectMood(btn) {
+            document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            state.mood = btn.getAttribute('data-mood');
+            StorageManager.debounceSave(100);
+        }
+
+        function updateSliders() {
+            const energy = document.getElementById('energySlider').value;
+            const stress = document.getElementById('stressSlider').value;
+
+            document.getElementById('energyVal').innerText = DateEngine.toPersianDigits(`${energy}٪`);
+            document.getElementById('stressVal').innerText = DateEngine.toPersianDigits(`${stress}٪`);
+
+            state.energy = energy;
+            state.stress = stress;
+        }
+
+        // ==========================================
+        // 6. saveData (ذخیره آفلاین محلی + همگام‌سازی ابری Supabase)
+        // ==========================================
+        async function saveData() {
+            const trNodes = document.querySelectorAll('#studyTableBody tr');
+            const unnormalizedRows = Array.from(trNodes).map(tr => ({
+                id: tr.id,
+                studyType: tr.querySelector('.row-study-type') ? tr.querySelector('.row-study-type').value : 'individual',
+                subject: tr.querySelector('.row-subject').value,
+                topic: tr.querySelector('.row-topic').value,
+                total: tr.querySelector('.row-total').value,
+                correct: tr.querySelector('.row-correct').value,
+                wrong: tr.querySelector('.row-wrong').value,
+                unanswered: tr.querySelector('.row-unanswered').value,
+                percentage: tr.querySelector('.row-percentage').value,
+                start: tr.querySelector('.row-start').value,
+                end: tr.querySelector('.row-end').value,
+                duration: tr.querySelector('.row-duration').value,
+                focus: tr.querySelector('.row-focus').value,
+                distraction: tr.querySelector('.row-distraction').value
+            }));
+
+            const winNodes = document.querySelectorAll('.win-input');
+            const winInputs = Array.from(winNodes).map(node => node.value);
+
+            const mistakeNodes = document.querySelectorAll('.mistake-input');
+            const mistakeInputs = Array.from(mistakeNodes).map(node => node.value);
+
+            const rawState = {
+                studentCode: currentStudentCode,
+                studentName: document.getElementById('studentName').value,
+                reportTitle: document.getElementById('reportTitle').value,
+                reportDate: document.getElementById('reportDate').value,
+                dailyMotivation: document.getElementById('dailyMotivation').value,
+                statSleep: document.getElementById('statSleep').value,
+                statPhone: document.getElementById('statPhone').value,
+                statProgramCompletion: document.getElementById('statProgramCompletion').value,
+                statDailyScore: document.getElementById('statDailyScore').value,
+                todayGoals: document.getElementById('todayGoals').value,
+                winInputs: winInputs,
+                mistakeInputs: mistakeInputs,
+                distractionReasons: document.getElementById('distractionReasons').value,
+                consultantNotes: document.getElementById('consultantNotes').value,
+                mood: state.mood,
+                energy: document.getElementById('energySlider').value,
+                stress: document.getElementById('stressSlider').value,
+                theme: state.theme,
+                rows: unnormalizedRows
+            };
+
+            const normalized = normalizeReportSchema(rawState);
+            if (!normalized) return;
+
+            state = { ...normalized };
+
+            const code = currentStudentCode;
+            let db = getStudentsDb();
+            if (!db[code]) {
+                db[code] = { code: code, name: state.studentName, history: [] };
+            }
+            db[code].name = state.studentName || db[code].name;
+
+            let history = db[code].history || [];
+
+            const hasRowsContent = state.rows.some(r => (r.subject && r.subject.trim() !== '') || (r.topic && r.topic.trim() !== '') || (r.duration || 0) > 0 || (r.total || 0) > 0);
+            const hasGeneralContent = (state.reportTitle && state.reportTitle.trim() !== '') ||
+                                      (state.dailyMotivation && state.dailyMotivation.trim() !== '') ||
+                                      (state.statSleep || 0) > 0 ||
+                                      (state.todayGoals && state.todayGoals.trim() !== '');
+
+            let currentDayRecord = null;
+            if (state.reportDate && (hasRowsContent || hasGeneralContent)) {
+                const reportTimestamp = DateEngine.parseJalaliToTimestamp(state.reportDate);
+                const idx = history.findIndex(h => DateEngine.parseJalaliToTimestamp(h.reportDate) === reportTimestamp);
+                
+                let totalStudyMins = state.rows.reduce((a, b) => a + (b.duration || 0), 0);
+                let totalTests = state.rows.reduce((a, b) => a + (b.total || 0), 0);
+                
+                currentDayRecord = normalizeReportSchema({ 
+                    ...state, 
+                    studentCode: code, 
+                    totalStudyMins, 
+                    totalTests, 
+                    timestamp: reportTimestamp || Date.now() 
+                });
+
+                if (idx >= 0) {
+                    history[idx] = currentDayRecord;
+                } else {
+                    history.push(currentDayRecord);
+                }
+            }
+
+            history.sort((a, b) => {
+                const tsA = DateEngine.parseJalaliToTimestamp(a.reportDate) || a.timestamp || 0;
+                const tsB = DateEngine.parseJalaliToTimestamp(b.reportDate) || b.timestamp || 0;
+                return tsA - tsB;
+            });
+
+            db[code].history = history;
+            saveStudentsDb(db);
+            updateProgressBar();
+
+            // ارسال ابری امن به پایگاه داده Supabase
+            if (supabaseClient && currentDayRecord) {
+                try {
+                    const { error } = await supabaseClient.rpc("upsert_daily_study_report", {
+                        p_report: currentDayRecord
+                    });
+                    if (!error) {
+                        const topCodeDisplay = document.getElementById('topStudentCodeDisplay');
+                        if (topCodeDisplay) {
+                            topCodeDisplay.title = "همگام‌سازی ابری با موفقیت انجام شد";
+                        }
+                    }
+                } catch (cloudErr) {
+                    console.warn("ارسال به سرور انجام نشد؛ نسخه محلی بدون تغییر باقی ماند.", cloudErr);
+                }
+            }
+        }
+
+        async function loadSavedData() {
+            try {
+                const db = getStudentsDb();
+                let student = db[currentStudentCode];
+                
+                document.getElementById('studentCode').value = currentStudentCode;
+                document.getElementById('topStudentCodeDisplay').innerText = currentStudentCode;
+
+                if (student && student.history && student.history.length > 0) {
+                    renderStateFromRecord(student.history[student.history.length - 1]);
+                }
+
+                // تجدید و دریافت آخرین گزارش‌ها از سرور Supabase
+                if (supabaseClient && currentStudentCode) {
+                    try {
+                        const { data, error } = await supabaseClient.rpc("get_student_study_reports", {
+                            p_student_code: currentStudentCode
+                        });
+
+                        if (!error && Array.isArray(data) && data.length > 0) {
+                            processImportedJsonData(data);
+                            const updatedDb = getStudentsDb();
+                            const updatedStudent = updatedDb[currentStudentCode];
+                            if (updatedStudent && updatedStudent.history && updatedStudent.history.length > 0) {
+                                renderStateFromRecord(updatedStudent.history[updatedStudent.history.length - 1]);
+                                updateCalculations();
+                                updateProgressBar();
+                            }
+                        }
+                    } catch (fetchErr) {
+                        console.warn("خطا در دریافت ابری؛ نسخه محلی فعال است.", fetchErr);
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to load data', e);
+            }
+        }
+
+        function renderStateFromRecord(record) {
+            if (!record) return;
+            const normalized = normalizeReportSchema(record);
+            state = { ...state, ...normalized };
+
+            if (state.studentName) document.getElementById('studentName').value = state.studentName;
+            document.getElementById('reportTitle').value = state.reportTitle || '';
+            document.getElementById('reportDate').value = state.reportDate || '';
+            document.getElementById('dailyMotivation').value = state.dailyMotivation || '';
+
+            document.getElementById('statSleep').value = state.statSleep || '';
+            document.getElementById('statPhone').value = state.statPhone || '';
+            document.getElementById('statProgramCompletion').value = state.statProgramCompletion || '';
+            document.getElementById('statDailyScore').value = state.statDailyScore || '';
+
+            document.getElementById('todayGoals').value = state.todayGoals || '';
+
+            const winNodes = document.querySelectorAll('.win-input');
+            if (state.winInputs) winNodes.forEach((node, i) => { node.value = state.winInputs[i] || ''; });
+
+            const mistakeNodes = document.querySelectorAll('.mistake-input');
+            if (state.mistakeInputs) mistakeNodes.forEach((node, i) => { node.value = state.mistakeInputs[i] || ''; });
+
+            document.getElementById('distractionReasons').value = state.distractionReasons || '';
+            document.getElementById('consultantNotes').value = state.consultantNotes || '';
+
+            if (state.energy) document.getElementById('energySlider').value = state.energy;
+            if (state.stress) document.getElementById('stressSlider').value = state.stress;
+
+            if (state.mood) {
+                const moodBtn = document.querySelector(`.mood-btn[data-mood="${state.mood}"]`);
+                if (moodBtn) selectMood(moodBtn);
+            }
+
+            document.getElementById('studyTableBody').innerHTML = '';
+            if (state.rows && state.rows.length > 0) {
+                state.rows.forEach(rData => addNewRow(rData));
+            }
+        }
+
+        function updateProgressBar() {
+            let filledCount = 0;
+            if (document.getElementById('studentName').value) filledCount++;
+            if (document.getElementById('reportTitle').value) filledCount++;
+            if (document.getElementById('statSleep').value) filledCount++;
+            if (document.getElementById('todayGoals').value) filledCount++;
+            if (document.querySelectorAll('#studyTableBody tr').length > 0) filledCount += 2;
+            const pct = Math.min(Math.round((filledCount / 6) * 100), 100);
+            document.getElementById('completionProgress').style.width = pct + '%';
+        }
+
+        function openClearDataModal() { 
+            StorageManager.flush();
+            document.getElementById('clearDataModal').classList.add('active'); 
+        }
+        function closeClearDataModal() { 
+            document.getElementById('clearDataModal').classList.remove('active'); 
+            StorageManager.flush();
+        }
+
+        function clearAllData() {
+            let db = getStudentsDb();
+            if (db[currentStudentCode]) {
+                db[currentStudentCode].history = [];
+                saveStudentsDb(db);
+            }
+            location.reload();
+        }
+
+        function exportJSON() {
+            StorageManager.flush();
+            const history = getStudentHistory(currentStudentCode);
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(history, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `سوابق_مطالعاتی_${currentStudentCode}_${Date.now()}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+            showToast('فایل JSON سوابق دانش‌آموز خروجی گرفته شد 💾');
+        }
+
+        function triggerImportJSON() { 
+            StorageManager.flush();
+            document.getElementById('importJsonInput').click(); 
+        }
+
+        // ==========================================
+        // 7. processImportedJsonData
+        // ==========================================
+        function processImportedJsonData(parsed) {
+            let reportsArr = [];
+            if (Array.isArray(parsed)) {
+                reportsArr = parsed;
+            } else if (parsed && typeof parsed === 'object') {
+                if (Array.isArray(parsed.history)) {
+                    reportsArr = parsed.history;
+                } else if (parsed.reportDate || parsed.studentCode || parsed.rows) {
+                    reportsArr = [parsed];
+                }
+            }
+
+            if (reportsArr.length === 0) {
+                return { success: false, count: 0, studentCode: null };
+            }
+
+            let db = getStudentsDb();
+            let importedCount = 0;
+            let targetCode = null;
+
+            reportsArr.forEach(report => {
+                if (!report || typeof report !== 'object') return;
+
+                const normalized = normalizeReportSchema(report);
+                if (!normalized) return;
+
+                const hasRows = Array.isArray(normalized.rows) && normalized.rows.some(r => 
+                    (r.subject && r.subject.trim() !== '') || 
+                    (r.duration || 0) > 0 || 
+                    (r.total || 0) > 0
+                );
+                const hasMeta = (normalized.reportTitle && normalized.reportTitle.trim() !== '') ||
+                                (normalized.statSleep || 0) > 0 ||
+                                (normalized.todayGoals && normalized.todayGoals.trim() !== '') ||
+                                (normalized.totalStudyMins || 0) > 0 ||
+                                (normalized.totalTests || 0) > 0;
+
+                if (!hasRows && !hasMeta) return;
+
+                const code = normalized.studentCode || parsed.code || currentStudentCode;
+                const name = normalized.studentName || parsed.name || 'دانش‌آموز';
+                targetCode = code;
+
+                if (!db[code]) {
+                    db[code] = {
+                        code: code,
+                        name: name,
+                        grade: normalized.grade || 'دوازدهم',
+                        field: normalized.field || 'علوم تجربی',
+                        school: normalized.school || '',
+                        consultantName: normalized.consultantName || 'استاد میرنژاد',
+                        history: []
+                    };
+                }
+
+                let history = db[code].history || [];
+                const rawDate = normalized.reportDate || (new Date().toLocaleDateString('fa-IR'));
+                const reportTimestamp = DateEngine.parseJalaliToTimestamp(rawDate);
+                const formattedJalali = DateEngine.formatTimestampToJalali(reportTimestamp) || rawDate;
+
+                const existingIdx = history.findIndex(h => DateEngine.parseJalaliToTimestamp(h.reportDate) === reportTimestamp);
+
+                if (existingIdx >= 0) {
+                    const existingReport = history[existingIdx];
+                    const mergedRows = [...(existingReport.rows || [])];
+
+                    (normalized.rows || []).forEach(newRow => {
+                        const rowMatchIdx = mergedRows.findIndex(r => 
+                            (r.id && newRow.id && r.id === newRow.id) || 
+                            (r.subject && newRow.subject && r.start && newRow.start && 
+                             r.subject.trim().toLowerCase() === newRow.subject.trim().toLowerCase() && 
+                             r.start.trim() === newRow.start.trim())
+                        );
+
+                        if (rowMatchIdx >= 0) {
+                            mergedRows[rowMatchIdx] = {
+                                ...mergedRows[rowMatchIdx],
+                                ...newRow,
+                                subject: newRow.subject || mergedRows[rowMatchIdx].subject,
+                                topic: newRow.topic || mergedRows[rowMatchIdx].topic,
+                                total: newRow.total || mergedRows[rowMatchIdx].total,
+                                correct: newRow.correct || mergedRows[rowMatchIdx].correct,
+                                wrong: newRow.wrong || mergedRows[rowMatchIdx].wrong,
+                                unanswered: newRow.unanswered || mergedRows[rowMatchIdx].unanswered,
+                                duration: newRow.duration || mergedRows[rowMatchIdx].duration,
+                                focus: newRow.focus || mergedRows[rowMatchIdx].focus,
+                                distraction: newRow.distraction || mergedRows[rowMatchIdx].distraction
+                            };
+                        } else {
+                            mergedRows.push(newRow);
+                        }
+                    });
+
+                    const mergeUniqueArrays = (arr1 = [], arr2 = []) => {
+                        const combined = [...arr1, ...arr2].map(s => String(s || '').trim()).filter(Boolean);
+                        return Array.from(new Set(combined));
+                    };
+
+                    const mergedWinInputs = mergeUniqueArrays(existingReport.winInputs, normalized.winInputs);
+                    const mergedMistakeInputs = mergeUniqueArrays(existingReport.mistakeInputs, normalized.mistakeInputs);
+
+                    const totalStudyMins = mergedRows.reduce((a, b) => a + (b.duration || 0), 0);
+                    const totalTests = mergedRows.reduce((a, b) => a + (b.total || 0), 0);
+
+                    const deepMergedReport = normalizeReportSchema({
+                        ...existingReport,
+                        ...normalized,
+                        studentCode: code,
+                        studentName: name || existingReport.studentName,
+                        reportDate: formattedJalali,
+                        reportTitle: normalized.reportTitle || existingReport.reportTitle,
+                        dailyMotivation: normalized.dailyMotivation || existingReport.dailyMotivation,
+                        statSleep: normalized.statSleep || existingReport.statSleep,
+                        statPhone: normalized.statPhone || existingReport.statPhone,
+                        statProgramCompletion: normalized.statProgramCompletion || existingReport.statProgramCompletion,
+                        statDailyScore: normalized.statDailyScore || existingReport.statDailyScore,
+                        todayGoals: normalized.todayGoals || existingReport.todayGoals,
+                        distractionReasons: normalized.distractionReasons || existingReport.distractionReasons,
+                        consultantNotes: normalized.consultantNotes || existingReport.consultantNotes,
+                        winInputs: mergedWinInputs,
+                        mistakeInputs: mergedMistakeInputs,
+                        rows: mergedRows,
+                        totalStudyMins,
+                        totalTests,
+                        timestamp: reportTimestamp || Date.now()
+                    });
+
+                    history[existingIdx] = deepMergedReport;
+                } else {
+                    const totalStudyMins = (normalized.rows || []).reduce((a, b) => a + (b.duration || 0), 0);
+                    const totalTests = (normalized.rows || []).reduce((a, b) => a + (b.total || 0), 0);
+
+                    const cleanReport = normalizeReportSchema({
+                        ...normalized,
+                        studentCode: code,
+                        studentName: name,
+                        reportDate: formattedJalali,
+                        totalStudyMins,
+                        totalTests,
+                        timestamp: reportTimestamp || Date.now()
+                    });
+
+                    history.push(cleanReport);
+                }
+
+                history.sort((a, b) => {
+                    const tsA = DateEngine.parseJalaliToTimestamp(a.reportDate) || a.timestamp || 0;
+                    const tsB = DateEngine.parseJalaliToTimestamp(b.reportDate) || b.timestamp || 0;
+                    return tsA - tsB;
+                });
+
+                db[code].history = history;
+                importedCount++;
+            });
+
+            saveStudentsDb(db);
+            return { success: true, count: importedCount, studentCode: targetCode };
+        }
+
+        function importJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    const result = processImportedJsonData(parsed);
+
+                    if (result.success && result.count > 0) {
+                        if (result.studentCode) {
+                            currentStudentCode = result.studentCode;
+                        }
+                        loadSavedData();
+                        updateCalculations();
+                        showToast(`تعداد ${result.count} گزارش با موفقیت ادغام و پردازش گردید 📂`);
+                    } else {
+                        showToast('فایل JSON معتبر است اما هیچ گزارش جدید یا محتواداری در آن یافت نشد ⚠️');
+                    }
+                } catch (err) {
+                    console.error('Error importing JSON:', err);
+                    showToast('خطا در خواندن فایل JSON! لطفاً از صحت فایل اطمینان حاصل کنید ❌');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        function openStatDrillDown(statType) {
+            StorageManager.flush();
+            currentDrillStatType = statType;
+            document.getElementById('drillDownModal').classList.add('active');
+            filterDrillDownTable();
+        }
+
+        function closeDrillDownModal() {
+            document.getElementById('drillDownModal').classList.remove('active');
+            StorageManager.flush();
+        }
+
+        // ==========================================
+        // 8. filterDrillDownTable
+        // ==========================================
+        function filterDrillDownTable() {
+            const history = getStudentHistory(currentStudentCode);
+            const searchVal = DateEngine.toAsciiDigits(document.getElementById('drillSearchInput').value).toLowerCase();
+            const sortVal = document.getElementById('drillSortSelect').value;
+            const tbody = document.getElementById('drillDownTableBody');
+            tbody.innerHTML = '';
+
+            let filtered = [...history];
+
+            if (searchVal) {
+                filtered = filtered.filter(h => 
+                    (h.reportDate && DateEngine.toAsciiDigits(h.reportDate).includes(searchVal)) ||
+                    (h.reportTitle && h.reportTitle.toLowerCase().includes(searchVal))
+                );
+            }
+
+            function getVal(h) {
+                if (currentDrillStatType === 'totalStudyMins') return DateEngine.toPersianDigits(((h.totalStudyMins||0)/60).toFixed(1)) + ' ساعت';
+                if (currentDrillStatType === 'totalTests') return DateEngine.toPersianDigits(h.totalTests||0) + ' تست';
+                if (currentDrillStatType === 'focus') {
+                    let fSum=0, fCnt=0;
+                    if(h.rows) h.rows.forEach(r=>{ if(r.focus){fSum+=parseFloat(r.focus); fCnt++;} });
+                    return fCnt>0 ? DateEngine.toPersianDigits((fSum/fCnt).toFixed(1))+' از ۱۰' : '۰';
+                }
+                return '-';
+            }
+
+            filtered.sort((a, b) => {
+                const tsA = DateEngine.parseJalaliToTimestamp(a.reportDate) || a.timestamp || 0;
+                const tsB = DateEngine.parseJalaliToTimestamp(b.reportDate) || b.timestamp || 0;
+                
+                if (sortVal === 'date-desc') return tsB - tsA;
+                if (sortVal === 'date-asc') return tsA - tsB;
+                return 0;
+            });
+
+            filtered.forEach(h => {
+                const tr = document.createElement('tr');
+                const displayDate = DateEngine.toPersianDigits(escapeHTML(h.reportDate || 'نامشخص'));
+                const displayTitle = escapeHTML(h.reportTitle || 'گزارش روزانه');
+                tr.innerHTML = `
+                    <td><strong>${displayDate}</strong></td>
+                    <td>${displayTitle}</td>
+                    <td><span class="confidence-badge conf-high">${getVal(h)}</span></td>
+                    <td>
+                        <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem;" onclick="openExactDayModal('${escapeHTML(h.reportDate)}')">
+                            👁️ مستقیم به گزارش همان روز
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function exportDrillDownCSV() {
+            StorageManager.flush();
+            showToast('خروجی Excel / CSV آماده گردید.');
+        }
+
+        // ==========================================
+        // 9. openExactDayModal (نمایش دقیق ۲۴ ساعته)
+        // ==========================================
+        function openExactDayModal(dateStr) {
+            StorageManager.flush();
+            const history = getStudentHistory(currentStudentCode);
+            const targetTs = DateEngine.parseJalaliToTimestamp(dateStr);
+            const target = history.find(h => DateEngine.parseJalaliToTimestamp(h.reportDate) === targetTs);
+            if (!target) { showToast('گزارش این روز یافت نشد.'); return; }
+
+            const container = document.getElementById('exactDayModalContent');
+            
+            let rowsHtml = '';
+            if (target.rows) {
+                target.rows.forEach(r => {
+                    const stLabel = r.studyType === 'class' ? '🎥 کلاس (×۱.۳)' : r.studyType === 'school' ? '🏫 مدرسه (×۱)' : '📖 فردی (×۲)';
+                    
+                    const timeStart24H = DateEngine.normalizeTimeTo24H(r.start);
+                    const timeEnd24H = DateEngine.normalizeTimeTo24H(r.end);
+
+                    rowsHtml += `
+                        <tr>
+                            <td>${escapeHTML(r.subject)||'-'}</td>
+                            <td>${escapeHTML(r.topic)||'-'}</td>
+                            <td><span class="confidence-badge conf-high">${stLabel}</span></td>
+                            <td>${DateEngine.toPersianDigits(r.total||0)}</td>
+                            <td>${DateEngine.toPersianDigits(r.correct||0)}</td>
+                            <td>${DateEngine.toPersianDigits(r.wrong||0)}</td>
+                            <td>${DateEngine.toPersianDigits(r.unanswered||0)}</td>
+                            <td>${DateEngine.toPersianDigits(r.percentage||'۰٪')}</td>
+                            <td style="direction: ltr; text-align: center; font-weight: 700;">${timeStart24H ? escapeHTML(timeStart24H) : '-'}</td>
+                            <td style="direction: ltr; text-align: center; font-weight: 700;">${timeEnd24H ? escapeHTML(timeEnd24H) : '-'}</td>
+                            <td>${DateEngine.toPersianDigits(r.duration||0)} دقیقه</td>
+                            <td>${DateEngine.toPersianDigits(r.focus||0)}</td>
+                            <td>${DateEngine.toPersianDigits(r.distraction||0)}</td>
+                        </tr>
+                    `;
+                });
+            }
+
+            const winListParen = (target.winInputs || []).map(w => escapeHTML(w)).filter(Boolean).join(' | ');
+            const mistakeListParen = (target.mistakeInputs || []).map(m => escapeHTML(m)).filter(Boolean).join(' | ');
+
+            container.innerHTML = `
+                <div style="background:var(--bg-main); padding:16px; border-radius:var(--radius-md); border:1px solid var(--border-color); margin-bottom:16px;">
+                    <p><strong>📌 عنوان:</strong> ${escapeHTML(target.reportTitle)||'-'} | <strong>👤 دانش‌آموز:</strong> ${escapeHTML(target.studentName)||'-'} (${escapeHTML(target.studentCode)||''}) | <strong>📆 تاریخ:</strong> ${DateEngine.toPersianDigits(escapeHTML(target.reportDate))}</p>
+                    <p style="margin-top:6px;"><strong>✨ انگیزه و هدف:</strong> ${escapeHTML(target.dailyMotivation)||'-'}</p>
+                </div>
+
+                <h4>📚 جدول کامل فعالیت‌های درسی:</h4>
+                <div class="table-responsive" style="margin-bottom:16px;">
+                    <table class="study-table">
+                        <thead>
+                            <tr>
+                                <th>درس</th><th>مبحث</th><th>نوع مطالعه</th><th>تست</th><th>صحیح</th><th>غلط</th><th>نزده</th><th>درصد</th><th>شروع (24H)</th><th>پایان (24H)</th><th>مدت</th><th>تمرکز</th><th>حواس‌پرتی</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rowsHtml}</tbody>
+                    </table>
+                </div>
+
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin-bottom:16px;">
+                    <div class="stat-input-card">😴 خواب: <strong>${DateEngine.toPersianDigits(target.statSleep||0)} ساعت</strong></div>
+                    <div class="stat-input-card">📱 گوشی: <strong>${DateEngine.toPersianDigits(target.statPhone||0)} ساعت</strong></div>
+                    <div class="stat-input-card">🎯 درصد برنامه: <strong>${DateEngine.toPersianDigits(target.statProgramCompletion||0)}٪</strong></div>
+                    <div class="stat-input-card">⭐ نمره عملکرد: <strong>${DateEngine.toPersianDigits(target.statDailyScore||0)} از ۱۰</strong></div>
+                </div>
+
+                <div style="background:var(--bg-main); padding:16px; border-radius:var(--radius-md); border:1px solid var(--border-color);">
+                    <p><strong>🎯 اهداف روز:</strong> ${escapeHTML(target.todayGoals)||'-'}</p>
+                    <p style="margin-top:6px;"><strong>🏆 سه موفقیت:</strong> ${winListParen || '-'}</p>
+                    <p style="margin-top:6px;"><strong>⚠️ سه چالش:</strong> ${mistakeListParen || '-'}</p>
+                    <p style="margin-top:6px;"><strong>💭 دلایل حواس‌پرتی:</strong> ${escapeHTML(target.distractionReasons)||'-'}</p>
+                    <p style="margin-top:6px; color:var(--primary);"><strong>💬 توصیه مشاور:</strong> ${escapeHTML(target.consultantNotes)||'-'}</p>
+                </div>
+            `;
+
+            document.getElementById('exactDayModal').classList.add('active');
+        }
+
+        function closeExactDayModal() {
+            document.getElementById('exactDayModal').classList.remove('active');
+            StorageManager.flush();
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toastMsg');
+            document.getElementById('toastText').innerText = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+    </script>
+</body>
+</html>
